@@ -10,7 +10,10 @@
 # - T03: pętla for — rozdzielanie punktów na kategorie
 
 import numpy as np                  # T08: pomocnicze obliczenia
-import matplotlib.pyplot as plt     # T09: wykresy
+
+import matplotlib                   # Najpierw importujemy główny moduł
+matplotlib.use('Agg')               # Wymuszamy silnik bezokienkowy (omija błąd Tkinter!)
+import matplotlib.pyplot as plt     # Dopiero teraz importujemy pyplot  # T09: wykresy
 
 
 # Wspólna paleta kolorów — definiujemy raz, używamy wszędzie
