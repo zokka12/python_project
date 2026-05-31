@@ -82,9 +82,9 @@ def oblicz_wspolrzedne_i_bledy(nag, pomiary):
     Błędy wyznaczane są z prawa propagacji Gaussa (tylko jeśli dostępne mHz i mD):
         mD  = mD_mm/1000 + mD_ppm*1e-6 * D   [m]
         mHz = mHz_sec / 206265                [rad]
-        mX  = sqrt((mD*cos(alfa))^2 + (D*sin(alfa)*mHz)^2)
-        mY  = sqrt((mD*sin(alfa))^2 + (D*cos(alfa)*mHz)^2)
-        mP  = sqrt(mX^2 + mY^2)
+        mX  = sqrt((mD*cos(alfa))^2 + (D*sin(alfa)*mHz)^2) * 1000.0 [mm]
+        mY  = sqrt((mD*sin(alfa))^2 + (D*cos(alfa)*mHz)^2) * 1000.0 [mm]
+        mP  = sqrt(mX^2 + mY^2) [mm]
 
     Parametry:
         nag     (dict): Słownik z przetworzonymi metadanymi zwrócony przez
@@ -101,22 +101,17 @@ def oblicz_wspolrzedne_i_bledy(nag, pomiary):
             'dY'    (list of float)      — przyrost współrzędnej Y [m]
             'X'     (list of float)      — współrzędna X [m]
             'Y'     (list of float)      — współrzędna Y [m]
-            'mX'    (list of float|None) — błąd składowej X [m] lub None
-            'mY'    (list of float|None) — błąd składowej Y [m] lub None
-            'mP'    (list of float|None) — błąd punktu [m] lub None
+            'mX'    (list of float|None) — błąd składowej X [mm] lub None
+            'mY'    (list of float|None) — błąd składowej Y [mm] lub None
+            'mP'    (list of float|None) — błąd punktu [mm] lub None
     """
     x0 = nag['x0']
     y0 = nag['y0']
 
     # Sprawdzamy czy mamy dane o dokładności instrumentu.
-    # Jeśli któregoś brakuje — pomijamy liczenie błędów i informujemy użytkownika.
     czy_bledy = (nag['mHz_sec'] is not None and
                  nag['mD_mm']  is not None and
                  nag['mD_ppm'] is not None)
-
-    if not czy_bledy:
-        print("Uwaga: brak parametrów dokładności instrumentu — "
-              "obliczenia błędów mX, mY, mP zostają pominięte.")
 
     # Przygotowujemy pusty słownik wyników — każdy klucz to lista,
     # do której będziemy dopisywać wyniki punkt po punkcie
@@ -165,11 +160,11 @@ def oblicz_wspolrzedne_i_bledy(nag, pomiary):
             # Błąd odległości: część stała [mm->m] + część proporcjonalna [ppm]
             mD_m = nag['mD_mm'] / 1000.0 + nag['mD_ppm'] * 1e-6 * d
 
-            # Prawo propagacji Gaussa — wzory z instrukcji projektu
+            # Prawo propagacji Gaussa — wyniki w metrach mnożymy przez 1000 by uzyskać milimetry
             mX = math.sqrt((mD_m * math.cos(alfa_rad))**2 +
-                           (d * math.sin(alfa_rad) * mHz_rad)**2)
+                           (d * math.sin(alfa_rad) * mHz_rad)**2) * 1000.0
             mY = math.sqrt((mD_m * math.sin(alfa_rad))**2 +
-                           (d * math.cos(alfa_rad) * mHz_rad)**2)
+                           (d * math.cos(alfa_rad) * mHz_rad)**2) * 1000.0
             mP = math.sqrt(mX**2 + mY**2)
 
             wyniki['mX'].append(mX)
