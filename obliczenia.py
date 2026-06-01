@@ -24,20 +24,17 @@ def przetworz_metadane(metadata):
     """
     nag = {}
 
-    # Ze stringa "X₀ = 1000.000 m    Y₀ = 1000.000 m" chcemy wyciągnąć dwie liczby.
-    # Zamieniamy '=' i 'm' na spacje, żeby split() dał nam listę
-    # i wyciągamy elementy pod indeksami [1] i [3]
+
     stan = metadata.get('Stanowisko O', '')
     czesci = stan.replace('=', ' ').replace('m', ' ').split()
     if len(czesci) >= 4:
         nag['x0'] = float(czesci[1])
         nag['y0'] = float(czesci[3])
     else:
-        # Jak nie ma danych w nagłówku, ustawiamy None żeby program się nie wysypał
+
         nag['x0'] = None
         nag['y0'] = None
 
-    # To samo dla punktu nawiązania A
     naw = metadata.get('Nawiązanie A', '')
     czesci = naw.replace('=', ' ').replace('m', ' ').split()
     if len(czesci) >= 4:
@@ -47,14 +44,10 @@ def przetworz_metadane(metadata):
         nag['x_a'] = None
         nag['y_a'] = None
 
-    # Dokładność kątowa jest w formacie '5"' — usuwamy cudzysłów i bierzemy liczbę
     kat = metadata.get('Dokł. kątowa', '')
     czesci = kat.replace('"', ' ').split()
     nag['mHz_sec'] = float(czesci[0]) if czesci else None
 
-    # Dokładność długości jest w formacie "2 mm + 2 ppm"
-    # Po replace('+', ' ') i split() dostajemy ['2', 'mm', '2', 'ppm']
-    # więc mm jest pod [0], a ppm pod [2]
     dl = metadata.get('Dokł. długości', '')
     czesci = dl.replace('+', ' ').split()
     if len(czesci) >= 3:
@@ -108,13 +101,10 @@ def oblicz_wspolrzedne_i_bledy(nag, pomiary):
     x0 = nag['x0']
     y0 = nag['y0']
 
-    # Sprawdzamy czy mamy dane o dokładności instrumentu.
     czy_bledy = (nag['mHz_sec'] is not None and
                  nag['mD_mm']  is not None and
                  nag['mD_ppm'] is not None)
 
-    # Przygotowujemy pusty słownik wyników — każdy klucz to lista,
-    # do której będziemy dopisywać wyniki punkt po punkcie
     wyniki = {
         'pkt':  [],
         'data': [],
@@ -129,20 +119,16 @@ def oblicz_wspolrzedne_i_bledy(nag, pomiary):
         'mP':   []
     }
 
-    # Główna pętla — przechodzimy przez wszystkie punkty pomiarowe
     for i in range(len(pomiary['pkt'])):
         hz_dd = pomiary['hz_dd'][i]
         d     = pomiary['d_m'][i]
 
-        # Zamieniamy kąt poziomy Hz na kąt matematyczny alfa (w radianach)
-        # wzór: alfa = 90° - Hz
         alfa_rad = math.radians(90.0 - hz_dd)
 
-        # Obliczamy przyrosty współrzędnych i same współrzędne
         dX = d * math.cos(alfa_rad)
         dY = d * math.sin(alfa_rad)
 
-        # Dopisujemy wyniki do słownika
+
         wyniki['pkt'].append(pomiary['pkt'][i])
         wyniki['data'].append(pomiary['data'][i])
         wyniki['hz_dd'].append(hz_dd)
@@ -152,15 +138,11 @@ def oblicz_wspolrzedne_i_bledy(nag, pomiary):
         wyniki['X'].append(x0 + dX)
         wyniki['Y'].append(y0 + dY)
 
-        # Błędy liczymy tylko jeśli mamy dane o dokładności instrumentu
         if czy_bledy:
-            # Przeliczamy mHz z sekund na radiany (206265" = 1 radian)
             mHz_rad = nag['mHz_sec'] / 206265.0
 
-            # Błąd odległości: część stała [mm->m] + część proporcjonalna [ppm]
             mD_m = nag['mD_mm'] / 1000.0 + nag['mD_ppm'] * 1e-6 * d
 
-            # Prawo propagacji Gaussa — wyniki w metrach mnożymy przez 1000 by uzyskać milimetry
             mX = math.sqrt((mD_m * math.cos(alfa_rad))**2 +
                            (d * math.sin(alfa_rad) * mHz_rad)**2) * 1000.0
             mY = math.sqrt((mD_m * math.sin(alfa_rad))**2 +
@@ -171,7 +153,7 @@ def oblicz_wspolrzedne_i_bledy(nag, pomiary):
             wyniki['mY'].append(mY)
             wyniki['mP'].append(mP)
         else:
-            # Jak nie liczymy błędów, wstawiamy None żeby struktura była spójna
+
             wyniki['mX'].append(None)
             wyniki['mY'].append(None)
             wyniki['mP'].append(None)
@@ -200,7 +182,6 @@ def oblicz_pole_gaussa(wyniki):
             pole_m2   (float)         — pole powierzchni [m²]
             pole_ha   (float)         — pole powierzchni [ha]
     """
-    # Wyciągamy tylko punkty wieloboku — te bez '_' w nazwie to wierzchołki
 
     punkty_wb = [
         (wyniki['X'][i], wyniki['Y'][i])
@@ -210,27 +191,22 @@ def oblicz_pole_gaussa(wyniki):
  
     n = len(punkty_wb)
  
-    # Wzór Gaussa — sumujemy iloczyny krzyżowe sąsiednich wierzchołków
     suma = 0.0
     for i in range(n):
         xi  = punkty_wb[i][0]
         yi  = punkty_wb[i][1]
-        # Następny wierzchołek — modulo n żeby po ostatnim wrócić do pierwszego
+
         xi1 = punkty_wb[(i + 1) % n][0]
         yi1 = punkty_wb[(i + 1) % n][1]
  
         suma += xi * yi1 - xi1 * yi
  
     pole_m2 = abs(suma) / 2.0
-    # 1 ha = 10 000 m² — przeliczamy dzieląc przez 10000
+
     pole_ha = pole_m2 / 10000.0
  
     return punkty_wb, pole_m2, pole_ha
 
-
-
-# ── Opcja F — regresja liniowa serii 7_xx ────────────────────────────────
-# Wszystkie operacje macierzowe wykonane ręcznie (bez numpy.linalg / scipy).
  
  
 def _transponuj(A):
@@ -328,11 +304,9 @@ def oblicz_regresje(x_list, y_list):
     if n < 3:
         raise ValueError("Do regresji potrzeba co najmniej 3 punktow.")
  
-    # Budujemy macierz A (n×2) i wektor y (n×1)
     A = [[x_list[i], 1.0] for i in range(n)]
     y = [[y_list[i]] for i in range(n)]
  
-    # theta = (A^T A)^{-1} A^T y  — rozwiązanie układu normalnego
     AT      = _transponuj(A)             
     ATA     = _mnoz_macierze(AT, A)      
     ATy     = _mnoz_macierze(AT, y)      
@@ -342,11 +316,9 @@ def oblicz_regresje(x_list, y_list):
     a = theta[0][0]
     b = theta[1][0]
  
-    # Wartości estymowane i residua 
     y_est   = [a * x_list[i] + b for i in range(n)]
     residua = [y_list[i] - y_est[i] for i in range(n)]
  
-    # Statystyki dopasowania
     SSres  = sum(e ** 2 for e in residua)
     y_mean = sum(y_list) / n
     SStot  = sum((y_list[i] - y_mean) ** 2 for i in range(n))

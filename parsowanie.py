@@ -36,11 +36,9 @@ def wczytaj_dziennik(sciezka_pliku):
         'd_m':    []
     }
 
-    # Otwieramy plik - używamy with, żeby plik zamknął się automatycznie
     with open(sciezka_pliku, 'r', encoding='utf-8') as f:
         linie = f.readlines()
 
-    # False = nagłówek, True = obserwacje
     czy_jestem_w_sekcji_obserwacji = False
 
     for linia in linie:

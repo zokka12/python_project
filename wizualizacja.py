@@ -54,7 +54,6 @@ def wykres_lokalizacji(wyniki, nag, sciezka_png):
             Y_wb.append(wyniki['Y'][i])
             nazwy_wb.append(pkt)
 
-    # ── Tworzymy figurę i osie  ──
     fig, ax = plt.subplots(figsize=(9, 9))
 
 
@@ -81,7 +80,6 @@ def wykres_lokalizacji(wyniki, nag, sciezka_png):
             fontsize=7, color='navy'
         )
 
-    # Punkty monitoringowe 7_xx
     ax.scatter(
         Y_mn, X_mn, 
         color=KOLOR_MON, s=20, marker='o',
@@ -115,7 +113,7 @@ def wykres_lokalizacji(wyniki, nag, sciezka_png):
         fontsize=10, fontweight='bold', color=KOLOR_NAW
     )
 
-    # ── Opisy osi, tytuł, legenda, siatka  ──
+    # Opisy osi, tytuł, legenda, siatka  
     ax.set_xlabel('Y [m]', fontsize=10)
     ax.set_ylabel('X [m]', fontsize=10)
     ax.set_title(
@@ -204,9 +202,6 @@ def wykres_bledow(wyniki, sciezka_png):
     fig.savefig(sciezka_png, dpi=150, bbox_inches='tight')
     plt.close(fig)
 
-
-
-   #  ── Opcja G - wizualizacja prostej regresji ──
 
 
 def wykres_regresji(wynik_reg, x_list, y_list, pkt_names, sciezka_png):

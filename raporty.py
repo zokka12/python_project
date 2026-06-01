@@ -47,15 +47,13 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
                           Jeśli True ale mP[0] is None — kolumny są pomijane automatycznie.
 
     """
-    # Sprawdzamy czy dane błędów faktycznie istnieją 
-    # mX[0] is None oznacza że obliczenia błędów były pominięte
+
     bledy_dostepne = z_bledami and (wyniki['mP'][0] is not None)
 
     data_raportu = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     with open(sciezka, 'w', encoding='utf-8') as f:
 
-        # ── Nagłówek raportu ──
         f.write('=' * 78 + '\n')
         f.write('  DZIENNIK POMIAROW TACHIMETRYCZNYCH\n')
         f.write('=' * 78 + '\n')
@@ -108,7 +106,7 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
             hz_str = formatuj_kat(hz_dd)
 
             if bledy_dostepne:
-                # Wartości mX, mY, mP wpadają z modułu obliczenia.py już jako milimetry
+
                 mX_mm = wyniki['mX'][i]
                 mY_mm = wyniki['mY'][i]
                 mP_mm = wyniki['mP'][i]
@@ -143,8 +141,6 @@ def zapisz_raport_pola(punkty_wieloboku, pole_m2, pole_ha, sciezka):
         pole_ha (float): Pole powierzchni w hektarach [ha].
         sciezka (str):   Ścieżka do pliku wyjściowego.
 
-    Korzysta z T06: with open, f-stringi z formatowaniem.
-    Korzysta z T03: pętla for z enumerate — numerujemy wierzchołki od 1.
     """
     data_raportu = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -181,8 +177,6 @@ def zapisz_raport_regresji(reg, X_list, Y_list, pkt_list, sciezka):
         pkt_list (list): Lista nazw punktów analizowanych (np. ['7_01', ...]).
         sciezka  (str):  Ścieżka do pliku wyjściowego.
 
-    Korzysta z T06: with open, f-stringi (+= znak, :.8f precyzja).
-    Korzysta z T03: pętla for po residuach z range(n).
     """
     data_raportu = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 

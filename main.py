@@ -4,7 +4,7 @@ from raporty    import zapisz_raport_wspolrzednych, zapisz_raport_pola, zapisz_r
 from wizualizacja import wykres_lokalizacji, wykres_bledow, wykres_regresji
 import os
 
-# ── Stałe ścieżek (definiujemy tu w main.py zgodnie z wymaganiami) ──
+# Stałe ścieżek 
 PLIK_WEJSCIOWY      = os.path.join('dane', 'dziennik_obserwacji.txt')
 RAPORT_WSPOLRZEDNE  = os.path.join('wyniki', 'raporty', 'raport_wspolrzednych.txt')
 WYKRES_LOKALIZACJA  = os.path.join('wyniki', 'wykresy', 'wykres_lokalizacja.png')
@@ -30,11 +30,14 @@ def wyswietl_menu():
 
 
 def main():
-    # Katalogi wyjściowe - tworzymy jeśli nie istnieją
+    '''
+    Główny punkt wejścia programu. 
+    Wyświetla menu, obsługuje wybory użytkownika.
+    '''
+
     os.makedirs(os.path.join('wyniki', 'raporty'), exist_ok=True)
     os.makedirs(os.path.join('wyniki', 'wykresy'), exist_ok=True)
 
-    # Stan programu - słownik przechowujący dane między opcjami
     stan = {
         'wczytano':  False,
         'obliczono': False,
@@ -44,11 +47,11 @@ def main():
         'wyniki':    None,
     }
 
-    while True:   # T04: pętla while — działa do wyboru '0'
+    while True:   
         wyswietl_menu()
         wybor = input('  Twoj wybor: ').strip().lower()
 
-        # ── Opcja A - parsowanie ──
+        # Opcja A - parsowanie 
         if wybor in ('a', '1'):
             if not os.path.exists(PLIK_WEJSCIOWY):
                 print(f"  [BLAD] Nie znaleziono pliku: {PLIK_WEJSCIOWY}")
@@ -60,7 +63,7 @@ def main():
             stan['wczytano'] = True
             print(f"  [OK] Wczytano {len(pomiary['pkt'])} punktow.")
 
-        # ── Opcja B - obliczenia ──
+        # Opcja B - obliczenia współrzędnych i błędów
         elif wybor in ('b', '2'):
             if not stan['wczytano']:
                 print("  [BLAD] Najpierw wykonaj opcje A.")
@@ -73,12 +76,12 @@ def main():
             bledy = 'tak' if wyniki['mP'][0] is not None else 'brak danych'
             print(f"  [OK] Obliczono {len(wyniki['pkt'])} punktow. Bledy: {bledy}.")
 
-        # ── Opcja C — raport współrzędnych ──
+        #  Opcja C — raport współrzędnych 
         elif wybor in ('c', '3'):
             if not stan['obliczono']:
                 print("  [BLAD] Najpierw wykonaj opcje B.")
                 continue
-            # Pytamy czy dołączyć błędy
+
             odp = input("  Dolaczyc kolumny bledow mX, mY, mP? [t/n]: ").strip().lower()
             z_bledami = odp in ('t', 'tak')
             zapisz_raport_wspolrzednych(
@@ -87,7 +90,7 @@ def main():
             )
             print(f"  [OK] Raport zapisany: {RAPORT_WSPOLRZEDNE}")
 
-        # ── Opcja D - wykresy ──
+        #  Opcja D - wykresy 
         elif wybor in ('d', '4'):
             if not stan['obliczono']:
                 print("  [BLAD] Najpierw wykonaj opcje B.")
@@ -99,9 +102,8 @@ def main():
             print("  Generuje wykres bledow...")
             wykres_bledow(stan['wyniki'], WYKRES_BLEDY)
             print(f"  [OK] Zapisano: {WYKRES_BLEDY}")  
-
-            # ── Opcja E -  oibliczenie pola powierzchni metodą Gaussa ──
-        
+       
+        # Opcja E -  obliczenie pola powierzchni metodą Gaussa    
         elif wybor in ('e', '5'):
             if not stan['obliczono']:
                 print("  [BLAD] Najpierw wykonaj opcje B.")
@@ -119,13 +121,12 @@ def main():
             print(f"  [OK] Raport zapisany: {RAPORT_POLE}")
 
 
-    # ── Opcja F - regresja liniowa serii 7_xx ──
+        #  Opcja F - regresja liniowa serii 7_xx 
         elif wybor in ('f', '6'):
             if not stan['obliczono']:
                 print("  [BLAD] Najpierw wykonaj opcje B.")
                 continue
 
-            # Wyodrebnij punkty serii 7_xx z wynikow
             pkt_7   = [(p, x, y)
                        for p, x, y in zip(stan['wyniki']['pkt'],
                                           stan['wyniki']['X'],
@@ -157,13 +158,13 @@ def main():
             print(f"       R2 = {wynik_reg['R2']:.6f}   Se = {wynik_reg['Se']*1000:.3f} mm")
             print(f"  [OK] Raport zapisany: {RAPORT_REGRESJI}")
 
-        # ── Opcja G - wizualizacja regresji ──
+        #  Opcja G - wizualizacja regresji 
         elif wybor in ('g', '7'):
             if stan['regresja'] is None:
                 if not stan['obliczono']:
                     print("  [BLAD] Najpierw wykonaj opcje B, a nastepnie F.")
                     continue
-                # Automatycznie przelicz regresje jesli B jest juz wykonane
+
                 print("  Brak wynikow regresji — uruchamiam obliczenia F automatycznie...")
                 pkt_7 = [(p, x, y)
                          for p, x, y in zip(stan['wyniki']['pkt'],
@@ -191,7 +192,7 @@ def main():
             )
             print(f"  [OK] Zapisano: {WYKRES_REGRESJA}")
 
-        # ── Wyjście ──
+        #  Wyjście 
         elif wybor == '0':
             print("  Do widzenia!")
             break
