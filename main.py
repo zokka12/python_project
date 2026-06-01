@@ -48,7 +48,7 @@ def main():
         wyswietl_menu()
         wybor = input('  Twoj wybor: ').strip().lower()
 
-        # ── Opcja A — parsowanie ──────────────────────────────────
+        # ── Opcja A - parsowanie ──
         if wybor in ('a', '1'):
             if not os.path.exists(PLIK_WEJSCIOWY):
                 print(f"  [BLAD] Nie znaleziono pliku: {PLIK_WEJSCIOWY}")
@@ -60,7 +60,7 @@ def main():
             stan['wczytano'] = True
             print(f"  [OK] Wczytano {len(pomiary['pkt'])} punktow.")
 
-        # ── Opcja B — obliczenia ──────────────────────────────────
+        # ── Opcja B - obliczenia ──
         elif wybor in ('b', '2'):
             if not stan['wczytano']:
                 print("  [BLAD] Najpierw wykonaj opcje A.")
@@ -73,7 +73,7 @@ def main():
             bledy = 'tak' if wyniki['mP'][0] is not None else 'brak danych'
             print(f"  [OK] Obliczono {len(wyniki['pkt'])} punktow. Bledy: {bledy}.")
 
-        # ── Opcja C — raport współrzędnych ────────────────────────
+        # ── Opcja C — raport współrzędnych ──
         elif wybor in ('c', '3'):
             if not stan['obliczono']:
                 print("  [BLAD] Najpierw wykonaj opcje B.")
@@ -87,7 +87,7 @@ def main():
             )
             print(f"  [OK] Raport zapisany: {RAPORT_WSPOLRZEDNE}")
 
-        # ── Opcja D — wykresy ─────────────────────────────────────
+        # ── Opcja D - wykresy ──
         elif wybor in ('d', '4'):
             if not stan['obliczono']:
                 print("  [BLAD] Najpierw wykonaj opcje B.")
@@ -100,7 +100,7 @@ def main():
             wykres_bledow(stan['wyniki'], WYKRES_BLEDY)
             print(f"  [OK] Zapisano: {WYKRES_BLEDY}")  
 
-            # ── Opcja E —  oibliczenie pola powierzchni metodą Gaussa────────────────
+            # ── Opcja E -  oibliczenie pola powierzchni metodą Gaussa ──
         
         elif wybor in ('e', '5'):
             if not stan['obliczono']:
@@ -119,7 +119,7 @@ def main():
             print(f"  [OK] Raport zapisany: {RAPORT_POLE}")
 
 
-    # ── Opcja F — regresja liniowa serii 7_xx ────────────────
+    # ── Opcja F - regresja liniowa serii 7_xx ──
         elif wybor in ('f', '6'):
             if not stan['obliczono']:
                 print("  [BLAD] Najpierw wykonaj opcje B.")
@@ -157,7 +157,7 @@ def main():
             print(f"       R2 = {wynik_reg['R2']:.6f}   Se = {wynik_reg['Se']*1000:.3f} mm")
             print(f"  [OK] Raport zapisany: {RAPORT_REGRESJI}")
 
-        # ── Opcja G — wizualizacja regresji ───────────────────────
+        # ── Opcja G - wizualizacja regresji ──
         elif wybor in ('g', '7'):
             if stan['regresja'] is None:
                 if not stan['obliczono']:
@@ -191,7 +191,7 @@ def main():
             )
             print(f"  [OK] Zapisano: {WYKRES_REGRESJA}")
 
-        # ── Wyjście ───────────────────────────────────────────────
+        # ── Wyjście ──
         elif wybor == '0':
             print("  Do widzenia!")
             break

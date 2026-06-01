@@ -201,7 +201,7 @@ def oblicz_pole_gaussa(wyniki):
             pole_ha   (float)         — pole powierzchni [ha]
     """
     # Wyciągamy tylko punkty wieloboku — te bez '_' w nazwie to wierzchołki
-    # (7_01, 7_02... mają '_', więc są pomijane — T02: if)
+
     punkty_wb = [
         (wyniki['X'][i], wyniki['Y'][i])
         for i in range(len(wyniki['pkt']))
@@ -211,7 +211,6 @@ def oblicz_pole_gaussa(wyniki):
     n = len(punkty_wb)
  
     # Wzór Gaussa — sumujemy iloczyny krzyżowe sąsiednich wierzchołków
-    # T03: pętla for po indeksach, % n domyka wielobok (ostatni łączy się z pierwszym)
     suma = 0.0
     for i in range(n):
         xi  = punkty_wb[i][0]
@@ -334,16 +333,16 @@ def oblicz_regresje(x_list, y_list):
     y = [[y_list[i]] for i in range(n)]
  
     # theta = (A^T A)^{-1} A^T y  — rozwiązanie układu normalnego
-    AT      = _transponuj(A)             # 2 × n
-    ATA     = _mnoz_macierze(AT, A)      # 2 × 2
-    ATy     = _mnoz_macierze(AT, y)      # 2 × 1
-    ATA_inv = _odwroc_2x2(ATA)           # 2 × 2
-    theta   = _mnoz_macierze(ATA_inv, ATy)  # 2 × 1
+    AT      = _transponuj(A)             
+    ATA     = _mnoz_macierze(AT, A)      
+    ATy     = _mnoz_macierze(AT, y)      
+    ATA_inv = _odwroc_2x2(ATA)           
+    theta   = _mnoz_macierze(ATA_inv, ATy)  
  
     a = theta[0][0]
     b = theta[1][0]
  
-    # Wartości estymowane i residua (T01: list comprehension)
+    # Wartości estymowane i residua 
     y_est   = [a * x_list[i] + b for i in range(n)]
     residua = [y_list[i] - y_est[i] for i in range(n)]
  

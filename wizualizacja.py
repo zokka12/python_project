@@ -1,26 +1,17 @@
 # wizualizacja.py
-# Moduł wykresów matplotlib
 # Opcja D — szkic sytuacyjny punktów + wykres błędów pomiaru
-#
-# Korzysta z:
-# - T09: fig, ax = plt.subplots() — interfejs obiektowy matplotlib,
-#        scatter, plot, bar, axhline, annotate, grid, legend, savefig
-# - T08: numpy do pomocniczych obliczeń (np.arange, np.mean)
-# - T02: if/else — warunki sprawdzające dostępność danych
-# - T03: pętla for — rozdzielanie punktów na kategorie
+import numpy as np                 
 
-import numpy as np                  # T08: pomocnicze obliczenia
+import matplotlib                  
+# Użycie silnika Agg jest bardzo powszechną i bezpieczną praktyką w 
+# programach CLI, które tylko zapisują obrazki, a nie wyświetlają interfejsu okienkowego.
+matplotlib.use('Agg')              
+import matplotlib.pyplot as plt    
 
-import matplotlib                   # Najpierw importujemy główny moduł
-matplotlib.use('Agg')               # Wymuszamy silnik bezokienkowy (omija błąd Tkinter!)
-import matplotlib.pyplot as plt     # Dopiero teraz importujemy pyplot  # T09: wykresy
-
-
-# Wspólna paleta kolorów — definiujemy raz, używamy wszędzie
-KOLOR_WB   = '#1f77b4'   # niebieski   — punkty wieloboku
-KOLOR_MON  = '#d62728'   # czerwony    — seria monitoringowa 7_xx
-KOLOR_STAN = '#2ca02c'   # zielony     — stanowisko O
-KOLOR_NAW  = '#ff7f0e'   # pomarańcz.  — nawiązanie A
+KOLOR_WB   = '#1f77b4'   
+KOLOR_MON  = '#d62728'   
+KOLOR_STAN = '#2ca02c'   
+KOLOR_NAW  = '#ff7f0e'   
 
 
 def wykres_lokalizacji(wyniki, nag, sciezka_png):
@@ -48,15 +39,13 @@ def wykres_lokalizacji(wyniki, nag, sciezka_png):
         ax.annotate() — podpisy przy punktach
         ax.set_aspect('equal') — skala 1:1
         fig.savefig() — zapis do PNG
-    Korzysta z T03: pętla for do rozdzielenia punktów na kategorie.
-    Korzysta z T02: if '_' in pkt — rozróżnienie typ punktu.
     """
-    # ── Rozdzielamy punkty na dwie grupy (T03 + T02) ──────────────
-    X_wb, Y_wb, nazwy_wb = [], [], []   # wielobok (punkty 1–20 + 7)
-    X_mn, Y_mn           = [], []       # seria monitoringowa (7_01..7_50)
+
+    X_wb, Y_wb, nazwy_wb = [], [], []   
+    X_mn, Y_mn           = [], []       
 
     for i, pkt in enumerate(wyniki['pkt']):
-        # Punkty serii monitoringowej mają '_' w nazwie (T02: if)
+
         if '_' in pkt:
             X_mn.append(wyniki['X'][i])
             Y_mn.append(wyniki['Y'][i])
@@ -65,70 +54,68 @@ def wykres_lokalizacji(wyniki, nag, sciezka_png):
             Y_wb.append(wyniki['Y'][i])
             nazwy_wb.append(pkt)
 
-    # ── Tworzymy figurę i osie (T09: interfejs obiektowy) ─────────
+    # ── Tworzymy figurę i osie  ──
     fig, ax = plt.subplots(figsize=(9, 9))
 
-    # Linia wieloboku — domykamy przez dołączenie pierwszego punktu na końcu
-    # T01: konkatenacja list przez '+'
+
     ax.plot(
-        X_wb + [X_wb[0]],
-        Y_wb + [Y_wb[0]],
+        Y_wb + [Y_wb[0]], 
+        X_wb + [X_wb[0]], 
         color=KOLOR_WB, linewidth=1.2, linestyle='--',
         zorder=1, label='Wielobok (linia)'
     )
 
-    # Punkty wieloboku — scatter (T09)
     ax.scatter(
-        X_wb, Y_wb,
+        Y_wb, X_wb, 
         color=KOLOR_WB, s=55, zorder=3,
         label=f'Wielobok | n = {len(X_wb)}'
     )
 
-    # Podpisy punktów wieloboku (T03: pętla + T09: annotate)
+
     for i, nazwa in enumerate(nazwy_wb):
         ax.annotate(
             nazwa,
-            xy=(X_wb[i], Y_wb[i]),
-            xytext=(4, 4),                   # przesunięcie od punktu w pikselach
+            xy=(Y_wb[i], X_wb[i]), 
+            xytext=(4, 4),                   
             textcoords='offset points',
             fontsize=7, color='navy'
         )
 
     # Punkty monitoringowe 7_xx
     ax.scatter(
-        X_mn, Y_mn,
+        Y_mn, X_mn, 
         color=KOLOR_MON, s=20, marker='o',
         zorder=2, alpha=0.7,
         label=f'Monitoring pkt 7 | n = {len(X_mn)}'
     )
 
-    # Stanowisko O — gwiazdka zielona
+    # stanowisko O 
     ax.scatter(
-        [nag['x0']], [nag['y0']],
+        [nag['y0']], [nag['x0']], 
         color=KOLOR_STAN, s=150, marker='*', zorder=5,
         label=f"Stanowisko O ({nag['x0']:.0f}, {nag['y0']:.0f})"
     )
     ax.annotate(
         'O',
-        xy=(nag['x0'], nag['y0']),
+        xy=(nag['y0'], nag['x0']), 
         xytext=(6, 6), textcoords='offset points',
         fontsize=10, fontweight='bold', color=KOLOR_STAN
     )
 
-    # Nawiązanie A — trójkąt pomarańczowy
+    # nawiązanie A 
     ax.scatter(
-        [nag['x_a']], [nag['y_a']],
+        [nag['y_a']], [nag['x_a']], 
         color=KOLOR_NAW, s=120, marker='^', zorder=5,
         label=f"Nawiazanie A ({nag['x_a']:.0f}, {nag['y_a']:.0f})"
     )
     ax.annotate(
         'A',
-        xy=(nag['x_a'], nag['y_a']),
+        xy=(nag['y_a'], nag['x_a']), 
         xytext=(6, 6), textcoords='offset points',
         fontsize=10, fontweight='bold', color=KOLOR_NAW
     )
 
-    # ── Opisy osi, tytuł, legenda, siatka (T09) ───────────────────
+    # ── Opisy osi, tytuł, legenda, siatka  ──
     ax.set_xlabel('Y [m]', fontsize=10)
     ax.set_ylabel('X [m]', fontsize=10)
     ax.set_title(
@@ -138,13 +125,12 @@ def wykres_lokalizacji(wyniki, nag, sciezka_png):
     )
     ax.legend(loc='lower left', framealpha=0.85, fontsize=8)
     ax.grid(True, linestyle=':', linewidth=0.5, alpha=0.6)
-    # set_aspect('equal') — skala 1:1, kluczowe w geodezji!
     ax.set_aspect('equal', adjustable='box')
 
     plt.tight_layout()
-    # T09: fig.savefig — zapis do PNG, dpi=150 = dobra jakość
+
     fig.savefig(sciezka_png, dpi=150, bbox_inches='tight')
-    plt.close(fig)   # zwalniamy pamięć — ważne przy wielu wykresach
+    plt.close(fig)   
 
 
 def wykres_bledow(wyniki, sciezka_png):
@@ -156,17 +142,8 @@ def wykres_bledow(wyniki, sciezka_png):
         wyniki      (dict): Słownik wynikowy z oblicz_wspolrzedne_i_bledy().
                             Klucze: pkt, mX, mY, mP (wartości w metrach [m]).
         sciezka_png (str):  Ścieżka zapisu pliku PNG.
-
-    Korzysta z T09 (matplotlib):
-        fig, axes = plt.subplots(1, 3) — 3 subploty w jednym wierszu
-        ax.bar()     — wykres słupkowy
-        ax.axhline() — pozioma linia (wartość średnia)
-        ax.set_xticks() — niestandardowe etykiety osi X
-    Korzysta z T08 (numpy): np.arange() — pozycje słupków,
-                             np.mean()  — wartość średnia.
-    Korzysta z T02: if — sprawdzenie czy dane błędów istnieją.
     """
-    # Sprawdzamy czy błędy zostały obliczone (T02: if)
+
     if wyniki['mP'][0] is None:
         print("  Brak danych bledow — wykres bledow pominieto.")
         return
@@ -174,23 +151,18 @@ def wykres_bledow(wyniki, sciezka_png):
     pkt = wyniki['pkt']
     n   = len(pkt)
 
-    # Przeliczamy z metrów na milimetry — T01: list comprehension
     mX_mm = [v * 1000.0 for v in wyniki['mX']]
     mY_mm = [v * 1000.0 for v in wyniki['mY']]
     mP_mm = [v * 1000.0 for v in wyniki['mP']]
 
-    # T08: np.arange — indeksy pozycji słupków (0, 1, 2, ..., n-1)
     pozycje = np.arange(n)
 
-    # T09: plt.subplots(1, 3) — figura z 3 subplotami w jednym wierszu
     fig, axes = plt.subplots(1, 3, figsize=(16, 5))
     fig.suptitle(
         f'Bledy pomiaru punktow — prawo propagacji Gaussa | n = {n} punktow',
         fontsize=11, fontweight='bold'
     )
 
-    # T03: zip() łączy trzy listy w jedną iterację — elegancki sposób
-    # na powtórzenie tego samego kodu dla mX, mY, mP
     for ax, dane_mm, tytul, kolor in zip(
         axes,
         [mX_mm,      mY_mm,      mP_mm],
@@ -199,24 +171,19 @@ def wykres_bledow(wyniki, sciezka_png):
          'Blad punktu — mP'],
         ['#5b9bd5', '#ed7d31', '#70ad47']
     ):
-        # T08: np.mean() — obliczamy średnią
         srednia = float(np.mean(dane_mm))
         mini    = min(dane_mm)
         maxi    = max(dane_mm)
 
-        # T09: ax.bar — słupki z kolorem i białą krawędzią
         ax.bar(pozycje, dane_mm,
                color=kolor, edgecolor='white', linewidth=0.4, zorder=2)
 
-        # T09: ax.axhline — pozioma linia przez cały wykres
-        # label= pojawi się w legendzie
         ax.axhline(
             srednia,
             color='black', linewidth=1.5, linestyle='--', zorder=3,
             label=f'srednia = {srednia:.3f} mm'
         )
 
-        # Statystyki w tytule — T06: f-string z formatowaniem
         ax.set_title(
             f'{tytul}\n'
             f'min = {mini:.3f}   max = {maxi:.3f}   sr = {srednia:.3f} mm',
@@ -227,7 +194,6 @@ def wykres_bledow(wyniki, sciezka_png):
         ax.legend(fontsize=8)
         ax.grid(axis='y', linestyle=':', linewidth=0.5, alpha=0.6, zorder=1)
 
-        # T09: set_xticks — co 5 punkt żeby etykiety się nie tłoczyły
         ax.set_xticks(pozycje[::5])
         ax.set_xticklabels(
             [pkt[j] for j in range(0, n, 5)],
@@ -240,7 +206,7 @@ def wykres_bledow(wyniki, sciezka_png):
 
 
 
-   #  ── Opcja G — wizualizacja prostej regresji ───────────────────────────────
+   #  ── Opcja G - wizualizacja prostej regresji ──
 
 
 def wykres_regresji(wynik_reg, x_list, y_list, pkt_names, sciezka_png):
@@ -258,51 +224,36 @@ def wykres_regresji(wynik_reg, x_list, y_list, pkt_names, sciezka_png):
         pkt_names   (list[str]):   Nazwy punktów (np. ['7_01', '7_02', ...]).
         sciezka_png (str):         Ścieżka zapisu pliku PNG.
 
-    Korzysta z T09 (matplotlib):
-        fig, axes = plt.subplots(1, 2) — dwa subploty obok siebie
-        ax.scatter()  — chmura punktów
-        ax.plot()     — prosta regresji
-        ax.bar()      — słupki residuów
-        ax.axhline()  — linia zerowa residuów
-    Korzysta z T08 (numpy): np.arange() — pozycje słupków.
-    Korzysta z T01: list comprehension — kolory słupków residuów.
     """
     a       = wynik_reg['a']
     b       = wynik_reg['b']
-    y_est   = wynik_reg['y_est']
     residua = wynik_reg['residua']
     R2      = wynik_reg['R2']
     Se      = wynik_reg['Se']
-    n       = wynik_reg['n']
+    n       = len(x_list) 
 
-    # Prosta regresji — dwa krańcowe punkty z marginesem 5%
     x_min, x_max = min(x_list), max(x_list)
     margin  = (x_max - x_min) * 0.05
     x_line  = [x_min - margin, x_max + margin]
     y_line  = [a * xv + b for xv in x_line]
 
-    # Etykieta równania prostej (T06: f-string)
+
     znak_b    = '+' if b >= 0 else '-'
     eq_label  = f'Y = {a:.5f}·X {znak_b} {abs(b):.2f}'
 
-    # Residua w mm — do statystyk w tytule (T01: list comprehension)
     res_mm       = [e * 1000.0 for e in residua]
     max_abs_mm   = max(abs(r) for r in res_mm)
 
-    # Kolory słupków residuów: czerwony = dodatni, niebieski = ujemny (T01)
     kolory_bar = [KOLOR_MON if e >= 0 else KOLOR_WB for e in residua]
 
-    # T08: pozycje słupków
     pozycje = np.arange(n)
 
-    # T09: plt.subplots(1, 2) — dwa subploty w jednym wierszu
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     fig.suptitle(
         f'Regresja liniowa — seria 7_xx  |  n = {n}  |  {eq_label}',
         fontsize=11, fontweight='bold'
     )
 
-    # ── Subplot lewy: punkty + prosta regresji ────────────────────
     ax1 = axes[0]
     ax1.scatter(
         x_list, y_list,
@@ -325,17 +276,14 @@ def wykres_regresji(wynik_reg, x_list, y_list, pkt_names, sciezka_png):
     ax1.legend(fontsize=8, framealpha=0.85)
     ax1.grid(True, linestyle=':', linewidth=0.5, alpha=0.6)
 
-    # ── Subplot prawy: residua słupkowe ───────────────────────────
     ax2 = axes[1]
 
-    # T09: ax.bar — słupki residuów (wartości w metrach)
     ax2.bar(
         pozycje, residua,
         color=kolory_bar, edgecolor='white', linewidth=0.3,
         width=0.7, zorder=2
     )
 
-    # T09: ax.axhline — linia zerowa
     ax2.axhline(0, color='black', linewidth=0.9, linestyle='-', zorder=3)
 
     ax2.set_xlabel('Nr pomiaru', fontsize=10)
@@ -347,7 +295,6 @@ def wykres_regresji(wynik_reg, x_list, y_list, pkt_names, sciezka_png):
     )
     ax2.grid(axis='y', linestyle=':', linewidth=0.5, alpha=0.6, zorder=1)
 
-    # T09: set_xticks — co 5. punkt żeby etykiety się nie tłoczyły
     ax2.set_xticks(pozycje[::5])
     ax2.set_xticklabels(
         [pkt_names[j] for j in range(0, n, 5)],
@@ -356,4 +303,4 @@ def wykres_regresji(wynik_reg, x_list, y_list, pkt_names, sciezka_png):
 
     plt.tight_layout()
     fig.savefig(sciezka_png, dpi=150, bbox_inches='tight')
-    plt.close(fig)   # zwalniamy pamięć
+    plt.close(fig)
