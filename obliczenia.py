@@ -227,3 +227,142 @@ def oblicz_pole_gaussa(wyniki):
     pole_ha = pole_m2 / 10000.0
  
     return punkty_wb, pole_m2, pole_ha
+
+
+
+# ── Opcja F — regresja liniowa serii 7_xx ────────────────────────────────
+# Wszystkie operacje macierzowe wykonane ręcznie (bez numpy.linalg / scipy).
+ 
+ 
+def _transponuj(A):
+    """
+    Transponuje macierz A (listę list).
+ 
+    Parametry:
+        A (list[list[float]]): Macierz wejściowa m × n.
+ 
+    Zwraca:
+        list[list[float]]: Macierz transponowana n × m.
+    """
+    m = len(A)
+    n = len(A[0])
+    return [[A[r][c] for r in range(m)] for c in range(n)]
+ 
+ 
+def _mnoz_macierze(A, B):
+    """
+    Mnoży dwie macierze A (m × k) i B (k × n).
+ 
+    Parametry:
+        A (list[list[float]]): Macierz lewa.
+        B (list[list[float]]): Macierz prawa.
+ 
+    Zwraca:
+        list[list[float]]: Iloczyn A·B o wymiarach m × n.
+    """
+    m = len(A)
+    k = len(A[0])
+    n = len(B[0])
+    C = [[0.0] * n for _ in range(m)]
+    for i in range(m):
+        for j in range(n):
+            for p in range(k):
+                C[i][j] += A[i][p] * B[p][j]
+    return C
+ 
+ 
+def _odwroc_2x2(M):
+    """
+    Odwraca macierz 2 × 2.
+ 
+    Parametry:
+        M (list[list[float]]): Macierz 2 × 2.
+ 
+    Zwraca:
+        list[list[float]]: Macierz odwrotna 2 × 2.
+ 
+    Wyjątki:
+        ValueError: Gdy wyznacznik wynosi zero (macierz osobliwa).
+    """
+    a, b = M[0][0], M[0][1]
+    c, d = M[1][0], M[1][1]
+    det = a * d - b * c
+    if abs(det) < 1e-12:
+        raise ValueError("Macierz A^T*A jest osobliwa — brak rozwiazania regresji.")
+    inv = 1.0 / det
+    return [
+        [ d * inv, -b * inv],
+        [-c * inv,  a * inv],
+    ]
+ 
+ 
+def oblicz_regresje(x_list, y_list):
+    """
+    Wyznacza parametry prostej regresji Y = a·X + b metodą macierzową
+    (najmniejsze kwadraty): theta = (A^T A)^{-1} A^T y.
+ 
+    Obliczenia wykonywane są wyłącznie na wbudowanych strukturach Pythona
+    i module math — bez gotowych funkcji statystycznych z bibliotek.
+ 
+    Parametry:
+        x_list (list[float]): Współrzędne X punktów serii 7_xx.
+        y_list (list[float]): Współrzędne Y punktów serii 7_xx.
+ 
+    Zwraca:
+        dict: Słownik z kluczami:
+            'a'       (float)       — nachylenie prostej
+            'b'       (float)       — wyraz wolny
+            'y_est'   (list[float]) — wartości estymowane Ŷ_i
+            'residua' (list[float]) — residua e_i = Y_i - Ŷ_i [m]
+            'R2'      (float)       — współczynnik determinacji
+            'Se'      (float)       — błąd standardowy residuów [m]
+            'n'       (int)         — liczba punktów
+            'SSres'   (float)       — suma kwadratów residuów
+            'SStot'   (float)       — całkowita suma kwadratów
+ 
+    Wyjątki:
+        ValueError: Gdy listy mają różną długość lub mniej niż 3 punkty.
+    """
+    n = len(x_list)
+    if n != len(y_list):
+        raise ValueError("x_list i y_list musza miec ta sama dlugosc.")
+    if n < 3:
+        raise ValueError("Do regresji potrzeba co najmniej 3 punktow.")
+ 
+    # Budujemy macierz A (n×2) i wektor y (n×1)
+    A = [[x_list[i], 1.0] for i in range(n)]
+    y = [[y_list[i]] for i in range(n)]
+ 
+    # theta = (A^T A)^{-1} A^T y  — rozwiązanie układu normalnego
+    AT      = _transponuj(A)             # 2 × n
+    ATA     = _mnoz_macierze(AT, A)      # 2 × 2
+    ATy     = _mnoz_macierze(AT, y)      # 2 × 1
+    ATA_inv = _odwroc_2x2(ATA)           # 2 × 2
+    theta   = _mnoz_macierze(ATA_inv, ATy)  # 2 × 1
+ 
+    a = theta[0][0]
+    b = theta[1][0]
+ 
+    # Wartości estymowane i residua (T01: list comprehension)
+    y_est   = [a * x_list[i] + b for i in range(n)]
+    residua = [y_list[i] - y_est[i] for i in range(n)]
+ 
+    # Statystyki dopasowania
+    SSres  = sum(e ** 2 for e in residua)
+    y_mean = sum(y_list) / n
+    SStot  = sum((y_list[i] - y_mean) ** 2 for i in range(n))
+ 
+    R2 = 1.0 - SSres / SStot if SStot > 1e-15 else 0.0
+    Se = math.sqrt(SSres / (n - 2))
+ 
+    return {
+        'a':       a,
+        'b':       b,
+        'y_est':   y_est,
+        'residua': residua,
+        'R2':      R2,
+        'Se':      Se,
+        'n':       n,
+        'SSres':   SSres,
+        'SStot':   SStot,
+    }

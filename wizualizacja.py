@@ -237,3 +237,123 @@ def wykres_bledow(wyniki, sciezka_png):
     plt.tight_layout()
     fig.savefig(sciezka_png, dpi=150, bbox_inches='tight')
     plt.close(fig)
+
+
+
+   #  ── Opcja G — wizualizacja prostej regresji ───────────────────────────────
+
+
+def wykres_regresji(wynik_reg, x_list, y_list, pkt_names, sciezka_png):
+    """
+    Tworzy wykres złożony z dwóch subplotów prezentujących wyniki regresji liniowej
+    dla serii pomiarowej 7_xx:
+      - lewy subplot: chmura punktów X, Y z dopasowaną prostą regresji,
+      - prawy subplot: słupkowy wykres residuów e_i = Y_i - Ŷ_i.
+
+    Parametry:
+        wynik_reg   (dict): Słownik zwrócony przez regression.oblicz_regresje().
+                            Klucze: a, b, y_est, residua, R2, Se, n.
+        x_list      (list[float]): Współrzędne X punktów serii 7_xx.
+        y_list      (list[float]): Współrzędne Y punktów serii 7_xx.
+        pkt_names   (list[str]):   Nazwy punktów (np. ['7_01', '7_02', ...]).
+        sciezka_png (str):         Ścieżka zapisu pliku PNG.
+
+    Korzysta z T09 (matplotlib):
+        fig, axes = plt.subplots(1, 2) — dwa subploty obok siebie
+        ax.scatter()  — chmura punktów
+        ax.plot()     — prosta regresji
+        ax.bar()      — słupki residuów
+        ax.axhline()  — linia zerowa residuów
+    Korzysta z T08 (numpy): np.arange() — pozycje słupków.
+    Korzysta z T01: list comprehension — kolory słupków residuów.
+    """
+    a       = wynik_reg['a']
+    b       = wynik_reg['b']
+    y_est   = wynik_reg['y_est']
+    residua = wynik_reg['residua']
+    R2      = wynik_reg['R2']
+    Se      = wynik_reg['Se']
+    n       = wynik_reg['n']
+
+    # Prosta regresji — dwa krańcowe punkty z marginesem 5%
+    x_min, x_max = min(x_list), max(x_list)
+    margin  = (x_max - x_min) * 0.05
+    x_line  = [x_min - margin, x_max + margin]
+    y_line  = [a * xv + b for xv in x_line]
+
+    # Etykieta równania prostej (T06: f-string)
+    znak_b    = '+' if b >= 0 else '-'
+    eq_label  = f'Y = {a:.5f}·X {znak_b} {abs(b):.2f}'
+
+    # Residua w mm — do statystyk w tytule (T01: list comprehension)
+    res_mm       = [e * 1000.0 for e in residua]
+    max_abs_mm   = max(abs(r) for r in res_mm)
+
+    # Kolory słupków residuów: czerwony = dodatni, niebieski = ujemny (T01)
+    kolory_bar = [KOLOR_MON if e >= 0 else KOLOR_WB for e in residua]
+
+    # T08: pozycje słupków
+    pozycje = np.arange(n)
+
+    # T09: plt.subplots(1, 2) — dwa subploty w jednym wierszu
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    fig.suptitle(
+        f'Regresja liniowa — seria 7_xx  |  n = {n}  |  {eq_label}',
+        fontsize=11, fontweight='bold'
+    )
+
+    # ── Subplot lewy: punkty + prosta regresji ────────────────────
+    ax1 = axes[0]
+    ax1.scatter(
+        x_list, y_list,
+        color=KOLOR_MON, s=28, zorder=3, alpha=0.85,
+        edgecolors='darkred', linewidths=0.4,
+        label='Punkty serii 7_xx'
+    )
+    ax1.plot(
+        x_line, y_line,
+        color=KOLOR_WB, linewidth=1.8, zorder=2,
+        label=eq_label
+    )
+    ax1.set_xlabel('X [m]', fontsize=10)
+    ax1.set_ylabel('Y [m]', fontsize=10)
+    ax1.set_title(
+        f'Punkty serii 7_xx + prosta regresji\n'
+        f'R² = {R2:.5f}   Se = {Se * 1000:.3f} mm',
+        fontsize=9
+    )
+    ax1.legend(fontsize=8, framealpha=0.85)
+    ax1.grid(True, linestyle=':', linewidth=0.5, alpha=0.6)
+
+    # ── Subplot prawy: residua słupkowe ───────────────────────────
+    ax2 = axes[1]
+
+    # T09: ax.bar — słupki residuów (wartości w metrach)
+    ax2.bar(
+        pozycje, residua,
+        color=kolory_bar, edgecolor='white', linewidth=0.3,
+        width=0.7, zorder=2
+    )
+
+    # T09: ax.axhline — linia zerowa
+    ax2.axhline(0, color='black', linewidth=0.9, linestyle='-', zorder=3)
+
+    ax2.set_xlabel('Nr pomiaru', fontsize=10)
+    ax2.set_ylabel('Residuum e [m]', fontsize=10)
+    ax2.set_title(
+        f'Residua  e_i = Y_i − Ŷ_i\n'
+        f'Se = {Se * 1000:.3f} mm   max|e| = {max_abs_mm:.3f} mm',
+        fontsize=9
+    )
+    ax2.grid(axis='y', linestyle=':', linewidth=0.5, alpha=0.6, zorder=1)
+
+    # T09: set_xticks — co 5. punkt żeby etykiety się nie tłoczyły
+    ax2.set_xticks(pozycje[::5])
+    ax2.set_xticklabels(
+        [pkt_names[j] for j in range(0, n, 5)],
+        rotation=45, ha='right', fontsize=7
+    )
+
+    plt.tight_layout()
+    fig.savefig(sciezka_png, dpi=150, bbox_inches='tight')
+    plt.close(fig)   # zwalniamy pamięć

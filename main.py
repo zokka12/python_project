@@ -1,8 +1,8 @@
 # main.py — zaktualizowany o opcje C i D
 from parsowanie import wczytaj_dziennik
-from obliczenia import przetworz_metadane, oblicz_wspolrzedne_i_bledy
-from raporty    import zapisz_raport_wspolrzednych   # opcja C
-from wizualizacja import wykres_lokalizacji, wykres_bledow  # opcja D
+from obliczenia import przetworz_metadane, oblicz_wspolrzedne_i_bledy, oblicz_regresje
+from raporty    import zapisz_raport_wspolrzednych, zapisz_raport_regresji   # opcja C + F
+from wizualizacja import wykres_lokalizacji, wykres_bledow, wykres_regresji
 import os
 
 # ── Stałe ścieżek (definiujemy tu w main.py zgodnie z wymaganiami) ──
@@ -10,6 +10,9 @@ PLIK_WEJSCIOWY      = os.path.join('dane', 'dziennik_obserwacji.txt')
 RAPORT_WSPOLRZEDNE  = os.path.join('wyniki', 'raporty', 'raport_wspolrzednych.txt')
 WYKRES_LOKALIZACJA  = os.path.join('wyniki', 'wykresy', 'wykres_lokalizacja.png')
 WYKRES_BLEDY        = os.path.join('wyniki', 'wykresy', 'wykres_bledy.png')
+RAPORT_REGRESJI     = os.path.join('wyniki', 'raporty', 'raport_regresji.txt')
+WYKRES_REGRESJA     = os.path.join('wyniki', 'wykresy', 'wykres_regresja.png')
+
 
 
 def wyswietl_menu():
@@ -94,6 +97,78 @@ def main():
             print("  Generuje wykres bledow...")
             wykres_bledow(stan['wyniki'], WYKRES_BLEDY)
             print(f"  [OK] Zapisano: {WYKRES_BLEDY}")
+
+    # ── Opcja F — regresja liniowa serii 7_xx ────────────────
+        elif wybor in ('f', '6'):
+            if not stan['obliczono']:
+                print("  [BLAD] Najpierw wykonaj opcje B.")
+                continue
+
+            # Wyodrebnij punkty serii 7_xx z wynikow
+            pkt_7   = [(p, x, y)
+                       for p, x, y in zip(stan['wyniki']['pkt'],
+                                          stan['wyniki']['X'],
+                                          stan['wyniki']['Y'])
+                       if str(p).startswith('7_')]
+
+            if len(pkt_7) < 3:
+                print("  [BLAD] Za malo punktow serii 7_xx (min. 3).")
+                continue
+
+            pkt_names = [t[0] for t in pkt_7]
+            x_list    = [t[1] for t in pkt_7]
+            y_list    = [t[2] for t in pkt_7]
+
+            wynik_reg = oblicz_regresje(x_list, y_list)
+            stan['regresja'] = {
+                'wynik':     wynik_reg,
+                'x_list':    x_list,
+                'y_list':    y_list,
+                'pkt_names': pkt_names,
+            }
+
+            zapisz_raport_regresji(
+                wynik_reg, x_list, y_list, pkt_names, RAPORT_REGRESJI
+            )
+            print(f"  [OK] Regresja obliczona dla {wynik_reg['n']} punktow.")
+            print(f"       a = {wynik_reg['a']:+.8f}")
+            print(f"       b = {wynik_reg['b']:+.4f}")
+            print(f"       R2 = {wynik_reg['R2']:.6f}   Se = {wynik_reg['Se']*1000:.3f} mm")
+            print(f"  [OK] Raport zapisany: {RAPORT_REGRESJI}")
+
+        # ── Opcja G — wizualizacja regresji ───────────────────────
+        elif wybor in ('g', '7'):
+            if stan['regresja'] is None:
+                if not stan['obliczono']:
+                    print("  [BLAD] Najpierw wykonaj opcje B, a nastepnie F.")
+                    continue
+                # Automatycznie przelicz regresje jesli B jest juz wykonane
+                print("  Brak wynikow regresji — uruchamiam obliczenia F automatycznie...")
+                pkt_7 = [(p, x, y)
+                         for p, x, y in zip(stan['wyniki']['pkt'],
+                                            stan['wyniki']['X'],
+                                            stan['wyniki']['Y'])
+                         if str(p).startswith('7_')]
+                if len(pkt_7) < 3:
+                    print("  [BLAD] Za malo punktow serii 7_xx (min. 3).")
+                    continue
+                pkt_names = [t[0] for t in pkt_7]
+                x_list    = [t[1] for t in pkt_7]
+                y_list    = [t[2] for t in pkt_7]
+                stan['regresja'] = {
+                    'wynik':     oblicz_regresje(x_list, y_list),
+                    'x_list':    x_list,
+                    'y_list':    y_list,
+                    'pkt_names': pkt_names,
+                }
+
+            reg = stan['regresja']
+            print("  Generuje wykres regresji...")
+            wykres_regresji(
+                reg['wynik'], reg['x_list'], reg['y_list'],
+                reg['pkt_names'], WYKRES_REGRESJA
+            )
+            print(f"  [OK] Zapisano: {WYKRES_REGRESJA}")
 
         # ── Wyjście ───────────────────────────────────────────────
         elif wybor == '0':
