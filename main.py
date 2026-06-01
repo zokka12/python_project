@@ -23,6 +23,8 @@ def wyswietl_menu():
     print('  B | 2  — Oblicz wspolrzedne i bledy')
     print('  C | 3  — Raport: wspolrzedne (.txt)')
     print('  D | 4  — Wykresy: lokalizacja + bledy (.png)')
+    print('  F | 6  — Regresja: oblicz i zapisz raport (.txt)')
+    print('  G | 7  — Regresja: wykres prostej + rezidua (.png)')
     print('  0      — Wyjscie')
     print('-' * 50)
 
