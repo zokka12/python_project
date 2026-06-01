@@ -1,7 +1,6 @@
-# main.py — zaktualizowany o opcje C i D
 from parsowanie import wczytaj_dziennik
-from obliczenia import przetworz_metadane, oblicz_wspolrzedne_i_bledy, oblicz_regresje
-from raporty    import zapisz_raport_wspolrzednych, zapisz_raport_regresji   # opcja C + F
+from obliczenia import przetworz_metadane, oblicz_wspolrzedne_i_bledy, oblicz_pole_gaussa, oblicz_regresje
+from raporty    import zapisz_raport_wspolrzednych, zapisz_raport_pola, zapisz_raport_regresji   
 from wizualizacja import wykres_lokalizacji, wykres_bledow, wykres_regresji
 import os
 
@@ -12,29 +11,30 @@ WYKRES_LOKALIZACJA  = os.path.join('wyniki', 'wykresy', 'wykres_lokalizacja.png'
 WYKRES_BLEDY        = os.path.join('wyniki', 'wykresy', 'wykres_bledy.png')
 RAPORT_REGRESJI     = os.path.join('wyniki', 'raporty', 'raport_regresji.txt')
 WYKRES_REGRESJA     = os.path.join('wyniki', 'wykresy', 'wykres_regresja.png')
-
+RAPORT_POLE         = os.path.join('wyniki', 'raporty', 'raport_pola.txt')
 
 
 def wyswietl_menu():
     print('\n' + '=' * 50)
-    print('  PROGRAM — pomiary tachimetryczne')
+    print('  PROGRAM - pomiary tachimetryczne')
     print('=' * 50)
-    print('  A | 1  — Wczytaj dziennik obserwacji')
-    print('  B | 2  — Oblicz wspolrzedne i bledy')
-    print('  C | 3  — Raport: wspolrzedne (.txt)')
-    print('  D | 4  — Wykresy: lokalizacja + bledy (.png)')
-    print('  F | 6  — Regresja: oblicz i zapisz raport (.txt)')
-    print('  G | 7  — Regresja: wykres prostej + rezidua (.png)')
-    print('  0      — Wyjscie')
+    print('  A | 1  - Wczytaj dziennik obserwacji')
+    print('  B | 2  - Oblicz wspolrzedne i bledy')
+    print('  C | 3  - Raport: wspolrzedne (.txt)')
+    print('  D | 4  - Wykresy: lokalizacja + bledy (.png)')
+    print('  E | 5  - Pole powierzchni: metoda Gaussa (.txt)')
+    print('  F | 6  - Regresja: oblicz i zapisz raport (.txt)')
+    print('  G | 7  - Regresja: wykres prostej + rezidua (.png)')
+    print('  0      - Wyjscie')
     print('-' * 50)
 
 
 def main():
-    # Katalogi wyjściowe — tworzymy jeśli nie istnieją
+    # Katalogi wyjściowe - tworzymy jeśli nie istnieją
     os.makedirs(os.path.join('wyniki', 'raporty'), exist_ok=True)
     os.makedirs(os.path.join('wyniki', 'wykresy'), exist_ok=True)
 
-    # Stan programu — słownik przechowujący dane między opcjami
+    # Stan programu - słownik przechowujący dane między opcjami
     stan = {
         'wczytano':  False,
         'obliczono': False,
@@ -98,7 +98,26 @@ def main():
 
             print("  Generuje wykres bledow...")
             wykres_bledow(stan['wyniki'], WYKRES_BLEDY)
-            print(f"  [OK] Zapisano: {WYKRES_BLEDY}")
+            print(f"  [OK] Zapisano: {WYKRES_BLEDY}")  
+
+            # ── Opcja E —  oibliczenie pola powierzchni metodą Gaussa────────────────
+        
+        elif wybor in ('e', '5'):
+            if not stan['obliczono']:
+                print("  [BLAD] Najpierw wykonaj opcje B.")
+                continue
+
+            punkty_wb, pole_m2, pole_ha = oblicz_pole_gaussa(stan['wyniki'])
+
+            if len(punkty_wb) < 3:
+                print("  [BLAD] Za malo wierzcholkow wieloboku (min. 3).")
+                continue
+
+            zapisz_raport_pola(punkty_wb, pole_m2, pole_ha, RAPORT_POLE)
+            print(f"  [OK] Pole powierzchni obliczone dla {len(punkty_wb)} wierzcholkow.")
+            print(f"       Pole = {pole_m2:.3f} m2  ({pole_ha:.6f} ha)")
+            print(f"  [OK] Raport zapisany: {RAPORT_POLE}")
+
 
     # ── Opcja F — regresja liniowa serii 7_xx ────────────────
         elif wybor in ('f', '6'):
