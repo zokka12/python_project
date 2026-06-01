@@ -177,3 +177,53 @@ def oblicz_wspolrzedne_i_bledy(nag, pomiary):
             wyniki['mP'].append(None)
 
     return wyniki
+
+ 
+def oblicz_pole_gaussa(wyniki):
+    """
+    Oblicza pole powierzchni wieloboku metodą Gaussa (Shoelace formula).
+ 
+    Bierze tylko punkty wieloboku (1–20 + punkt 7) — pomija serię monitoringową
+    7_xx bo to nie są wierzchołki wieloboku, tylko wielokrotne pomiary tego samego punktu.
+ 
+    Wzór Gaussa:
+        P = 0.5 * |Σ(Xi * Yi+1 - Xi+1 * Yi)|
+    gdzie indeks i+1 jest cykliczny — ostatni punkt łączy się z pierwszym.
+ 
+    Parametry:
+        wyniki (dict): Słownik wynikowy z oblicz_wspolrzedne_i_bledy().
+                       Klucze: pkt, X, Y.
+ 
+    Zwraca:
+        tuple: (punkty_wb, pole_m2, pole_ha), gdzie:
+            punkty_wb (list of tuple) — lista par (X, Y) wierzchołków wieloboku
+            pole_m2   (float)         — pole powierzchni [m²]
+            pole_ha   (float)         — pole powierzchni [ha]
+    """
+    # Wyciągamy tylko punkty wieloboku — te bez '_' w nazwie to wierzchołki
+    # (7_01, 7_02... mają '_', więc są pomijane — T02: if)
+    punkty_wb = [
+        (wyniki['X'][i], wyniki['Y'][i])
+        for i in range(len(wyniki['pkt']))
+        if '_' not in wyniki['pkt'][i]
+    ]
+ 
+    n = len(punkty_wb)
+ 
+    # Wzór Gaussa — sumujemy iloczyny krzyżowe sąsiednich wierzchołków
+    # T03: pętla for po indeksach, % n domyka wielobok (ostatni łączy się z pierwszym)
+    suma = 0.0
+    for i in range(n):
+        xi  = punkty_wb[i][0]
+        yi  = punkty_wb[i][1]
+        # Następny wierzchołek — modulo n żeby po ostatnim wrócić do pierwszego
+        xi1 = punkty_wb[(i + 1) % n][0]
+        yi1 = punkty_wb[(i + 1) % n][1]
+ 
+        suma += xi * yi1 - xi1 * yi
+ 
+    pole_m2 = abs(suma) / 2.0
+    # 1 ha = 10 000 m² — przeliczamy dzieląc przez 10000
+    pole_ha = pole_m2 / 10000.0
+ 
+    return punkty_wb, pole_m2, pole_ha
