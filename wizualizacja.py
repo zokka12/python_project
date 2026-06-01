@@ -1,10 +1,8 @@
-# wizualizacja.py
-# Opcja D — szkic sytuacyjny punktów + wykres błędów pomiaru
 import numpy as np                 
 
-import matplotlib                  
-# Użycie silnika Agg jest bardzo powszechną i bezpieczną praktyką w 
-# programach CLI, które tylko zapisują obrazki, a nie wyświetlają interfejsu okienkowego.
+import matplotlib  
+                
+# Użycie silnika Agg 
 matplotlib.use('Agg')              
 import matplotlib.pyplot as plt    
 

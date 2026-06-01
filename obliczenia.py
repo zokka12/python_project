@@ -1,5 +1,5 @@
 # Moduł obliczeń tachimetrycznych
-# Etap B — wyznaczanie współrzędnych i błędów pomiaru punktu
+
 
 import math
 
@@ -65,19 +65,14 @@ def oblicz_wspolrzedne_i_bledy(nag, pomiary):
     Oblicza współrzędne płaskie X, Y oraz błędy mX, mY, mP dla wszystkich
     punktów pomiarowych metodą biegunową.
 
-    Współrzędne wyznaczane są ze wzorów:
-        alfa = 90° - Hz          (kąt matematyczny)
-        dX   = D * cos(alfa)
-        dY   = D * sin(alfa)
-        X    = X0 + dX
-        Y    = Y0 + dY
-
-    Błędy wyznaczane są z prawa propagacji Gaussa (tylko jeśli dostępne mHz i mD):
-        mD  = mD_mm/1000 + mD_ppm*1e-6 * D   [m]
-        mHz = mHz_sec / 206265                [rad]
-        mX  = sqrt((mD*cos(alfa))^2 + (D*sin(alfa)*mHz)^2) * 1000.0 [mm]
-        mY  = sqrt((mD*sin(alfa))^2 + (D*cos(alfa)*mHz)^2) * 1000.0 [mm]
-        mP  = sqrt(mX^2 + mY^2) [mm]
+     Wzory:
+        alfa = 90° - Hz
+        dX = D * cos(alfa),  X = X0 + dX
+        dY = D * sin(alfa),  Y = Y0 + dY
+        mD = mD_mm/1000 + mD_ppm*1e-6 * D
+        mX = sqrt((mD*cos(alfa))^2 + (D*sin(alfa)*mHz)^2) * 1000  [mm]
+        mY = sqrt((mD*sin(alfa))^2 + (D*cos(alfa)*mHz)^2) * 1000  [mm]
+        mP = sqrt(mX^2 + mY^2)  [mm]
 
     Parametry:
         nag     (dict): Słownik z przetworzonymi metadanymi zwrócony przez

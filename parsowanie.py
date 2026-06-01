@@ -1,5 +1,4 @@
 # Moduł parsowania dziennika pomiarów tachimetrycznych
-# Etap A — wczytywanie i strukturyzacja danych wejściowych
 
 
 def wczytaj_dziennik(sciezka_pliku):
@@ -35,7 +34,6 @@ def wczytaj_dziennik(sciezka_pliku):
         'hz_dd':  [],
         'd_m':    []
     }
-
     with open(sciezka_pliku, 'r', encoding='utf-8') as f:
         linie = f.readlines()
 
@@ -43,23 +41,29 @@ def wczytaj_dziennik(sciezka_pliku):
 
     for linia in linie:
         linia = linia.strip()
+
+        # Puste linie pomijamy — nie ma w nich nic ciekawego
         if linia == "":
             continue
 
+        # Jak natrafimy na słowo OBSERWACJE, to przełączamy się na tryb obserwacji
         if "OBSERWACJE" in linia:
             czy_jestem_w_sekcji_obserwacji = True
             continue
 
         if czy_jestem_w_sekcji_obserwacji == False:
+            # Jesteśmy w nagłówku — każda linia ma format "Klucz : wartość"
             if ":" in linia:
                 klucz, wartosc = linia.split(":", 1)
                 metadata[klucz.strip()] = wartosc.strip()
         else:
+            # Jesteśmy w sekcji obserwacji — pomijamy linie pomocnicze tabeli
             if "Pkt" in linia or "D [m]" in linia or "---" in linia or "===" in linia:
                 continue
             if "KONIEC" in linia:
                 continue
 
+            # Dzielimy linię na kolumny po białych znakach
             dane = linia.split()
 
             if len(dane) >= 4:
@@ -72,6 +76,7 @@ def wczytaj_dziennik(sciezka_pliku):
                 pomiary['data'].append(data)
                 pomiary['d_m'].append(d)
 
+                # Przetwarzanie kąta DDD°MM'SS" na składowe i stopnie dziesiętne.
                 hz_czysty   = hz_surowe.replace('°', ' ').replace("'", ' ').replace('"', ' ')
                 czesci_kata = hz_czysty.split()
 
@@ -83,8 +88,9 @@ def wczytaj_dziennik(sciezka_pliku):
                 pomiary['hz_min'].append(min_)
                 pomiary['hz_sec'].append(sec)
 
+                # Przeliczamy kąt na stopnie dziesiętne
                 dd = deg + (min_ / 60) + (sec / 3600)
                 pomiary['hz_dd'].append(dd)
 
-
+    # Zwracamy oba słowniki do main.py
     return metadata, pomiary

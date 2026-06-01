@@ -1,5 +1,4 @@
-# raporty.py
-# Opcja C — zapis wyników obliczeń do pliku .txt
+# Moduł generowania raportów tekstowych
 
 
 from datetime import datetime  
@@ -15,12 +14,13 @@ def formatuj_kat(hz_dd):
     Zwraca:
         str: Kąt w formacie np. '076°02'47"'.
 
-    """
+     """
     deg  = int(hz_dd)
     frac = (hz_dd - deg) * 60
     min_ = int(frac)
     sec  = round((frac - min_) * 60)
 
+    # Korekta przepełnienia
     if sec == 60:
         sec   = 0
         min_ += 1
@@ -46,24 +46,28 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
         z_bledami (bool): Czy dołączyć kolumny mX, mY, mP do tabeli (domyślnie True).
                           Jeśli True ale mP[0] is None — kolumny są pomijane automatycznie.
 
-    """
-
+                          """
+    # Sprawdzamy czy dane błędów faktycznie istnieją 
+    # mX[0] is None oznacza że obliczenia błędów były pominięte
     bledy_dostepne = z_bledami and (wyniki['mP'][0] is not None)
 
+    # Bieżąca data i godzina — stdlib datetime
     data_raportu = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     with open(sciezka, 'w', encoding='utf-8') as f:
 
+        # ── Nagłówek raportu ──────────────────────────────────────
         f.write('=' * 78 + '\n')
         f.write('  DZIENNIK POMIAROW TACHIMETRYCZNYCH\n')
         f.write('=' * 78 + '\n')
-
+        # T06: f-string — wstawiamy zmienne bezpośrednio w tekst
         f.write(f"  Data raportu   : {data_raportu}\n")
         f.write(f"  Stanowisko O   : X0 = {nag['x0']:.3f} m   "
                 f"Y0 = {nag['y0']:.3f} m\n")
         f.write(f"  Nawiazanie A   : Xa = {nag['x_a']:.3f} m   "
                 f"Ya = {nag['y_a']:.3f} m\n")
 
+        # Parametry instrumentu — tylko jeśli dostępne (T02: if)
         if nag.get('mHz_sec') is not None:
             f.write(f"  Dokl. katowa   : {nag['mHz_sec']}\"\n")
         if nag.get('mD_mm') is not None:
@@ -71,9 +75,11 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
                     f"{nag['mD_ppm']} ppm\n")
         f.write('=' * 78 + '\n\n')
 
+        # ── Nagłówek tabeli — zmienny w zależności od opcji (T02) ─
         f.write('  OBSERWACJE I OBLICZENIA\n')
 
         if bledy_dostepne:
+            # Szersza tabela z kolumnami błędów
             sep = '-' * 108 + '\n'
             naglowek = (
                 f"{'Pkt':<8} {'Data':<12} {'Hz':>12} {'D[m]':>8} "
@@ -82,6 +88,7 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
                 f"{'mX[mm]':>7} {'mY[mm]':>7} {'mP[mm]':>7}\n"
             )
         else:
+            # Węższa tabela — tylko współrzędne
             sep = '-' * 82 + '\n'
             naglowek = (
                 f"{'Pkt':<8} {'Data':<12} {'Hz':>12} {'D[m]':>8} "
@@ -93,6 +100,7 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
         f.write(naglowek)
         f.write(sep)
 
+        # ── Dane punktów — T03: pętla for po indeksach ────────────
         for i in range(len(wyniki['pkt'])):
             pkt   = wyniki['pkt'][i]
             data  = wyniki['data'][i]
@@ -103,14 +111,16 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
             X     = wyniki['X'][i]
             Y     = wyniki['Y'][i]
 
+            # T06: formatuj_kat() — przeliczamy z powrotem na DDD°MM'SS"
             hz_str = formatuj_kat(hz_dd)
 
             if bledy_dostepne:
-
+                # Wartości mX, mY, mP wpadają z modułu obliczenia.py już jako milimetry
                 mX_mm = wyniki['mX'][i]
                 mY_mm = wyniki['mY'][i]
                 mP_mm = wyniki['mP'][i]
 
+                # T06: f-string z wyrównaniem i precyzją
                 linia = (
                     f"{pkt:<8} {data:<12} {hz_str:>12} {d:>8.3f} "
                     f"{dX:>+9.3f} {dY:>+9.3f} "
@@ -125,6 +135,7 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
                 )
             f.write(linia)
 
+        # ── Stopka ────────────────────────────────────────────────
         f.write(sep)
         f.write('\n  KONIEC RAPORTU\n')
         f.write('=' * 78 + '\n')
@@ -149,9 +160,11 @@ def zapisz_raport_pola(punkty_wieloboku, pole_m2, pole_ha, sciezka):
         f.write('  POLE POWIERZCHNI WIELOBOKU - metoda Gaussa\n')
         f.write(f'  Data raportu: {data_raportu}\n')
         f.write('-' * 58 + '\n')
+        # T06: f-string z wyrównaniem kolumn
         f.write(f"{'Nr':<5} {'X [m]':>12} {'Y [m]':>12}\n")
         f.write('-' * 32 + '\n')
 
+        # T03: enumerate() — daje parę (indeks, wartość), start=1 numeruje od 1
         for idx, (x, y) in enumerate(punkty_wieloboku, start=1):
             f.write(f"{idx:<5} {x:>12.3f} {y:>12.3f}\n")
 
@@ -215,13 +228,14 @@ def zapisz_raport_regresji(reg, X_list, Y_list, pkt_list, sciezka):
         f.write('-' * 58 + '\n')
 
         for i in range(n):
-
+            # Wyliczamy wartość estymowaną w locie na potrzeby tabeli
             Y_est = a * X_list[i] + b
             f.write(
                 f"{pkt_list[i]:<8} {X_list[i]:>12.4f} {Y_list[i]:>12.4f} "
                 f"{Y_est:>12.4f} {e[i]:>+10.4f}\n"
             )
 
+        # Kontrolna suma residuów — powinna być ≈ 0
         suma_e = sum(e)
         f.write('-' * 58 + '\n')
         f.write(f"  Suma e  (= 0 - kontrola) : {suma_e:+.4f}\n")
