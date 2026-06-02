@@ -34,6 +34,7 @@ def wczytaj_dziennik(sciezka_pliku):
         'hz_dd':  [],
         'd_m':    []
     }
+
     with open(sciezka_pliku, 'r', encoding='utf-8') as f:
         linie = f.readlines()
 
@@ -41,23 +42,21 @@ def wczytaj_dziennik(sciezka_pliku):
 
     for linia in linie:
         linia = linia.strip()
+        if linia == "": continue # Pominięcie pustych linii
 
-        # Puste linie pomijamy — nie ma w nich nic ciekawego
-        if linia == "":
-            continue
 
-        # Jak natrafimy na słowo OBSERWACJE, to przełączamy się na tryb obserwacji
+        # Przełączenie trybu parsowania po znalezieniu słowa "OBSERWACJE"
         if "OBSERWACJE" in linia:
             czy_jestem_w_sekcji_obserwacji = True
             continue
 
         if czy_jestem_w_sekcji_obserwacji == False:
-            # Jesteśmy w nagłówku — każda linia ma format "Klucz : wartość"
+            # Podział linii na klucz i wartość przy pierwszym dwukropku
             if ":" in linia:
                 klucz, wartosc = linia.split(":", 1)
                 metadata[klucz.strip()] = wartosc.strip()
         else:
-            # Jesteśmy w sekcji obserwacji — pomijamy linie pomocnicze tabeli
+            # Pomijamy linie pomocnicze tabeli
             if "Pkt" in linia or "D [m]" in linia or "---" in linia or "===" in linia:
                 continue
             if "KONIEC" in linia:
@@ -76,7 +75,7 @@ def wczytaj_dziennik(sciezka_pliku):
                 pomiary['data'].append(data)
                 pomiary['d_m'].append(d)
 
-                # Przetwarzanie kąta DDD°MM'SS" na składowe i stopnie dziesiętne.
+                # Konwersja kąta DDD°MM'SS" na stopnie dziesiętne
                 hz_czysty   = hz_surowe.replace('°', ' ').replace("'", ' ').replace('"', ' ')
                 czesci_kata = hz_czysty.split()
 
@@ -92,5 +91,5 @@ def wczytaj_dziennik(sciezka_pliku):
                 dd = deg + (min_ / 60) + (sec / 3600)
                 pomiary['hz_dd'].append(dd)
 
-    # Zwracamy oba słowniki do main.py
+   
     return metadata, pomiary
