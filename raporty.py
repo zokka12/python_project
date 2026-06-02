@@ -48,26 +48,24 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
 
                           """
     # Sprawdzamy czy dane błędów faktycznie istnieją 
-    # mX[0] is None oznacza że obliczenia błędów były pominięte
     bledy_dostepne = z_bledami and (wyniki['mP'][0] is not None)
 
-    # Bieżąca data i godzina — stdlib datetime
+    # Bieżąca data i godzina 
     data_raportu = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     with open(sciezka, 'w', encoding='utf-8') as f:
 
-        # ── Nagłówek raportu ──────────────────────────────────────
+        # Nagłówek raportu 
         f.write('=' * 78 + '\n')
         f.write('  DZIENNIK POMIAROW TACHIMETRYCZNYCH\n')
         f.write('=' * 78 + '\n')
-        # T06: f-string — wstawiamy zmienne bezpośrednio w tekst
         f.write(f"  Data raportu   : {data_raportu}\n")
         f.write(f"  Stanowisko O   : X0 = {nag['x0']:.3f} m   "
                 f"Y0 = {nag['y0']:.3f} m\n")
         f.write(f"  Nawiazanie A   : Xa = {nag['x_a']:.3f} m   "
                 f"Ya = {nag['y_a']:.3f} m\n")
 
-        # Parametry instrumentu — tylko jeśli dostępne (T02: if)
+        # Wyświetlanie parametrów instrumentu (jeśli zostały wczytane)
         if nag.get('mHz_sec') is not None:
             f.write(f"  Dokl. katowa   : {nag['mHz_sec']}\"\n")
         if nag.get('mD_mm') is not None:
@@ -75,9 +73,10 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
                     f"{nag['mD_ppm']} ppm\n")
         f.write('=' * 78 + '\n\n')
 
-        # ── Nagłówek tabeli — zmienny w zależności od opcji (T02) ─
+        # Nagłówek tabeli
         f.write('  OBSERWACJE I OBLICZENIA\n')
 
+        # Wybór szerokości tabeli w zależności od tego, czy drukujemy błędy
         if bledy_dostepne:
             # Szersza tabela z kolumnami błędów
             sep = '-' * 108 + '\n'
@@ -100,7 +99,7 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
         f.write(naglowek)
         f.write(sep)
 
-        # ── Dane punktów — T03: pętla for po indeksach ────────────
+        # Iteracja po punktach i zapis danych do tabeli
         for i in range(len(wyniki['pkt'])):
             pkt   = wyniki['pkt'][i]
             data  = wyniki['data'][i]
@@ -111,7 +110,7 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
             X     = wyniki['X'][i]
             Y     = wyniki['Y'][i]
 
-            # T06: formatuj_kat() — przeliczamy z powrotem na DDD°MM'SS"
+            # przeliczamy na DDD°MM'SS"
             hz_str = formatuj_kat(hz_dd)
 
             if bledy_dostepne:
@@ -120,7 +119,7 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
                 mY_mm = wyniki['mY'][i]
                 mP_mm = wyniki['mP'][i]
 
-                # T06: f-string z wyrównaniem i precyzją
+                # f-string wyrównuje do prawej na 10 znaków z 3 miejscami po przecinku
                 linia = (
                     f"{pkt:<8} {data:<12} {hz_str:>12} {d:>8.3f} "
                     f"{dX:>+9.3f} {dY:>+9.3f} "
@@ -135,7 +134,7 @@ def zapisz_raport_wspolrzednych(wyniki, nag, sciezka, z_bledami=True):
                 )
             f.write(linia)
 
-        # ── Stopka ────────────────────────────────────────────────
+        # Stopka 
         f.write(sep)
         f.write('\n  KONIEC RAPORTU\n')
         f.write('=' * 78 + '\n')
@@ -164,7 +163,7 @@ def zapisz_raport_pola(punkty_wieloboku, pole_m2, pole_ha, sciezka):
         f.write(f"{'Nr':<5} {'X [m]':>12} {'Y [m]':>12}\n")
         f.write('-' * 32 + '\n')
 
-        # T03: enumerate() — daje parę (indeks, wartość), start=1 numeruje od 1
+        # enumerate() - numeruje od 1 zamiast 0
         for idx, (x, y) in enumerate(punkty_wieloboku, start=1):
             f.write(f"{idx:<5} {x:>12.3f} {y:>12.3f}\n")
 
@@ -235,7 +234,7 @@ def zapisz_raport_regresji(reg, X_list, Y_list, pkt_list, sciezka):
                 f"{Y_est:>12.4f} {e[i]:>+10.4f}\n"
             )
 
-        # Kontrolna suma residuów — powinna być ≈ 0
+        # Kontrolna suma residuów (powinna dążyć do zera)
         suma_e = sum(e)
         f.write('-' * 58 + '\n')
         f.write(f"  Suma e  (= 0 - kontrola) : {suma_e:+.4f}\n")
