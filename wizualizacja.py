@@ -1,3 +1,4 @@
+# Moduł odpowiedzialny za generowanie szkiców i wykresów
 import numpy as np                 
 
 import matplotlib  
@@ -52,9 +53,10 @@ def wykres_lokalizacji(wyniki, nag, sciezka_png):
             Y_wb.append(wyniki['Y'][i])
             nazwy_wb.append(pkt)
 
+    # Inicjalizacja figury  
     fig, ax = plt.subplots(figsize=(9, 9))
 
-
+    # Rysowanie linii wieloboku
     ax.plot(
         Y_wb + [Y_wb[0]], 
         X_wb + [X_wb[0]], 
@@ -62,13 +64,14 @@ def wykres_lokalizacji(wyniki, nag, sciezka_png):
         zorder=1, label='Wielobok (linia)'
     )
 
+    # Naniesienie punktów wieloboku
     ax.scatter(
         Y_wb, X_wb, 
         color=KOLOR_WB, s=55, zorder=3,
         label=f'Wielobok | n = {len(X_wb)}'
     )
 
-
+    # Dodanie etykiet nazw punktów
     for i, nazwa in enumerate(nazwy_wb):
         ax.annotate(
             nazwa,
@@ -85,7 +88,7 @@ def wykres_lokalizacji(wyniki, nag, sciezka_png):
         label=f'Monitoring pkt 7 | n = {len(X_mn)}'
     )
 
-    # stanowisko O 
+    # Stanowisko instrumentu O 
     ax.scatter(
         [nag['y0']], [nag['x0']], 
         color=KOLOR_STAN, s=150, marker='*', zorder=5,
@@ -98,7 +101,7 @@ def wykres_lokalizacji(wyniki, nag, sciezka_png):
         fontsize=10, fontweight='bold', color=KOLOR_STAN
     )
 
-    # nawiązanie A 
+    # Punkt nawiązania A 
     ax.scatter(
         [nag['y_a']], [nag['x_a']], 
         color=KOLOR_NAW, s=120, marker='^', zorder=5,
@@ -123,10 +126,10 @@ def wykres_lokalizacji(wyniki, nag, sciezka_png):
     ax.grid(True, linestyle=':', linewidth=0.5, alpha=0.6)
     ax.set_aspect('equal', adjustable='box')
 
-    plt.tight_layout()
+    plt.tight_layout()  # Optymalizacja marginesów
 
-    fig.savefig(sciezka_png, dpi=150, bbox_inches='tight')
-    plt.close(fig)   
+    fig.savefig(sciezka_png, dpi=150, bbox_inches='tight')  # Zapis wysokiej jakości PNG
+    plt.close(fig)   # Zwolnienie pamięci po zapisaniu wykresu
 
 
 def wykres_bledow(wyniki, sciezka_png):
@@ -153,6 +156,7 @@ def wykres_bledow(wyniki, sciezka_png):
 
     pozycje = np.arange(n)
 
+    # Wykres zbiorczy (3 podwykresy obok siebie)
     fig, axes = plt.subplots(1, 3, figsize=(16, 5))
     fig.suptitle(
         f'Bledy pomiaru punktow — prawo propagacji Gaussa | n = {n} punktow',
@@ -247,7 +251,9 @@ def wykres_regresji(wynik_reg, x_list, y_list, pkt_names, sciezka_png):
         fontsize=11, fontweight='bold'
     )
 
+    # Podwykres 1: Regresja
     ax1 = axes[0]
+    
     ax1.scatter(
         x_list, y_list,
         color=KOLOR_MON, s=28, zorder=3, alpha=0.85,
@@ -269,6 +275,8 @@ def wykres_regresji(wynik_reg, x_list, y_list, pkt_names, sciezka_png):
     ax1.legend(fontsize=8, framealpha=0.85)
     ax1.grid(True, linestyle=':', linewidth=0.5, alpha=0.6)
 
+
+    # Podwykres 2: Residua
     ax2 = axes[1]
 
     ax2.bar(
