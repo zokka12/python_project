@@ -24,7 +24,7 @@ def wyswietl_menu():
     print('  D | 4  - Wykresy: lokalizacja + bledy (.png)')
     print('  E | 5  - Pole powierzchni: metoda Gaussa (.txt)')
     print('  F | 6  - Regresja: oblicz i zapisz raport (.txt)')
-    print('  G | 7  - Regresja: wykres prostej + rezidua (.png)')
+    print('  G | 7  - Regresja: wykres prostej + residua (.png)')
     print('  0      - Wyjscie')
     print('-' * 50)
 
@@ -35,7 +35,7 @@ def main():
     Wyświetla menu, obsługuje wybory użytkownika.
     '''
 
-    # Inicjalizacja katalogów wyjściowych (zabezpieczenie przed brakiem folderów)
+    # Inicjalizacja katalogów wyjściowych - zabezpieczenie przed brakiem folderów
     os.makedirs(os.path.join('wyniki', 'raporty'), exist_ok=True)
     os.makedirs(os.path.join('wyniki', 'wykresy'), exist_ok=True)
 
@@ -53,7 +53,7 @@ def main():
         wyswietl_menu()
         wybor = input('  Twoj wybor: ').strip().lower()
 
-        #parsowanie 
+        #parsowanie - wejsie danych
         if wybor in ('a', '1'):
             if not os.path.exists(PLIK_WEJSCIOWY):
                 print(f"  [BLAD] Nie znaleziono pliku: {PLIK_WEJSCIOWY}")

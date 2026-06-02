@@ -159,11 +159,10 @@ def zapisz_raport_pola(punkty_wieloboku, pole_m2, pole_ha, sciezka):
         f.write('  POLE POWIERZCHNI WIELOBOKU - metoda Gaussa\n')
         f.write(f'  Data raportu: {data_raportu}\n')
         f.write('-' * 58 + '\n')
-        # T06: f-string z wyrównaniem kolumn
+        #wyrównanie kolumn
         f.write(f"{'Nr':<5} {'X [m]':>12} {'Y [m]':>12}\n")
         f.write('-' * 32 + '\n')
 
-        # enumerate() - numeruje od 1 zamiast 0
         for idx, (x, y) in enumerate(punkty_wieloboku, start=1):
             f.write(f"{idx:<5} {x:>12.3f} {y:>12.3f}\n")
 
@@ -227,14 +226,14 @@ def zapisz_raport_regresji(reg, X_list, Y_list, pkt_list, sciezka):
         f.write('-' * 58 + '\n')
 
         for i in range(n):
-            # Wyliczamy wartość estymowaną w locie na potrzeby tabeli
+            # wyrównanie kolumny
             Y_est = a * X_list[i] + b
             f.write(
                 f"{pkt_list[i]:<8} {X_list[i]:>12.4f} {Y_list[i]:>12.4f} "
                 f"{Y_est:>12.4f} {e[i]:>+10.4f}\n"
             )
 
-        # Kontrolna suma residuów (powinna dążyć do zera)
+        # kontrolna suma residuów 
         suma_e = sum(e)
         f.write('-' * 58 + '\n')
         f.write(f"  Suma e  (= 0 - kontrola) : {suma_e:+.4f}\n")

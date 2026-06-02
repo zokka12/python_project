@@ -45,7 +45,7 @@ def wczytaj_dziennik(sciezka_pliku):
         if linia == "": continue # Pominięcie pustych linii
 
 
-        # Przełączenie trybu parsowania po znalezieniu słowa "OBSERWACJE"
+        # Przełączenie trybu po znalezieniu słowa obserwacje 
         if "OBSERWACJE" in linia:
             czy_jestem_w_sekcji_obserwacji = True
             continue
@@ -75,7 +75,6 @@ def wczytaj_dziennik(sciezka_pliku):
                 pomiary['data'].append(data)
                 pomiary['d_m'].append(d)
 
-                # Konwersja kąta DDD°MM'SS" na stopnie dziesiętne
                 hz_czysty   = hz_surowe.replace('°', ' ').replace("'", ' ').replace('"', ' ')
                 czesci_kata = hz_czysty.split()
 

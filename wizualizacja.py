@@ -3,8 +3,7 @@ import numpy as np
 
 import matplotlib  
                 
-# Użycie silnika Agg 
-matplotlib.use('Agg')              
+# Użycie silnika Agg - bo inaczej nie działało :(((((
 import matplotlib.pyplot as plt    
 
 KOLOR_WB   = '#1f77b4'   
@@ -128,7 +127,7 @@ def wykres_lokalizacji(wyniki, nag, sciezka_png):
 
     plt.tight_layout()  # Optymalizacja marginesów
 
-    fig.savefig(sciezka_png, dpi=150, bbox_inches='tight')  # Zapis wysokiej jakości PNG
+    fig.savefig(sciezka_png, dpi=150, bbox_inches='tight')  
     plt.close(fig)   # Zwolnienie pamięci po zapisaniu wykresu
 
 
@@ -156,7 +155,7 @@ def wykres_bledow(wyniki, sciezka_png):
 
     pozycje = np.arange(n)
 
-    # Wykres zbiorczy (3 podwykresy obok siebie)
+    # Wykres zbiorczy 3 podwykresy razem
     fig, axes = plt.subplots(1, 3, figsize=(16, 5))
     fig.suptitle(
         f'Bledy pomiaru punktow — prawo propagacji Gaussa | n = {n} punktow',
@@ -251,7 +250,7 @@ def wykres_regresji(wynik_reg, x_list, y_list, pkt_names, sciezka_png):
         fontsize=11, fontweight='bold'
     )
 
-    # Podwykres 1: Regresja
+    # Podwykres 1 - regresja
     ax1 = axes[0]
     
     ax1.scatter(
@@ -276,7 +275,7 @@ def wykres_regresji(wynik_reg, x_list, y_list, pkt_names, sciezka_png):
     ax1.grid(True, linestyle=':', linewidth=0.5, alpha=0.6)
 
 
-    # Podwykres 2: Residua
+    # Podwykres 2 - residua
     ax2 = axes[1]
 
     ax2.bar(
