@@ -157,7 +157,7 @@ def main():
             print(f"  [OK] Regresja obliczona dla {wynik_reg['n']} punktow.")
             print(f"       a = {wynik_reg['a']:+.8f}")
             print(f"       b = {wynik_reg['b']:+.4f}")
-            print(f"       R2 = {wynik_reg['R2']:.6f}   Se = {wynik_reg['Se']:.3f} m")
+            print(f"       R2 = {wynik_reg['R2']:.6f}   Se = {wynik_reg['Se']*1000.0:.3f} mm")
             print(f"  [OK] Raport zapisany: {RAPORT_REGRESJI}")
 
         # wizualizacja regresji 

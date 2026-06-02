@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib  
                 
 # Użycie silnika Agg - bo inaczej nie działało :(((((
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt    
 
 KOLOR_WB   = '#1f77b4'   
@@ -149,9 +150,9 @@ def wykres_bledow(wyniki, sciezka_png):
     pkt = wyniki['pkt']
     n   = len(pkt)
 
-    mX_mm = [v * 1000.0 for v in wyniki['mX']]
-    mY_mm = [v * 1000.0 for v in wyniki['mY']]
-    mP_mm = [v * 1000.0 for v in wyniki['mP']]
+    mX_mm = wyniki['mX']
+    mY_mm = wyniki['mY']
+    mP_mm = wyniki['mP']
 
     pozycje = np.arange(n)
 
