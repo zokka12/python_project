@@ -1,6 +1,5 @@
 # Moduł obliczeń tachimetrycznych
 
-
 import math
 
 
@@ -9,7 +8,7 @@ def przetworz_metadane(metadata):
     Wyciąga i konwertuje parametry liczbowe ze słownika metadanych.
 
     Parametry:
-        metadata (dict): Słownik z surowymi danymi nagłówkowymi (str) zwrócony
+        metadata (dict): Słownik z surowymi danymi nagłówkowymi zwrócony
                          przez wczytaj_dziennik().
 
     Zwraca:
@@ -24,7 +23,7 @@ def przetworz_metadane(metadata):
     """
     nag = {}
 
-
+    # usuwanie jednostek i znaków równości dla czystych floatów
     stan = metadata.get('Stanowisko O', '')
     czesci = stan.replace('=', ' ').replace('m', ' ').split()
     if len(czesci) >= 4:
@@ -120,6 +119,7 @@ def oblicz_wspolrzedne_i_bledy(nag, pomiary):
 
         alfa_rad = math.radians(90.0 - hz_dd)
 
+        # wyznaczenie przyrostów współrzędnych
         dX = d * math.cos(alfa_rad)
         dY = d * math.sin(alfa_rad)
 
@@ -133,11 +133,14 @@ def oblicz_wspolrzedne_i_bledy(nag, pomiary):
         wyniki['X'].append(x0 + dX)
         wyniki['Y'].append(y0 + dY)
 
+
+        # algorytm propagacji błędów dla metody biegunowej (Prawo Gaussa)
         if czy_bledy:
-            mHz_rad = nag['mHz_sec'] / 206265.0
+            mHz_rad = nag['mHz_sec'] / 206265.0 # zamiana sekundy na radiany
 
-            mD_m = nag['mD_mm'] / 1000.0 + nag['mD_ppm'] * 1e-6 * d
+            mD_m = nag['mD_mm'] / 1000.0 + nag['mD_ppm'] * 1e-6 * d # błąd długości
 
+            # obliczanie błędów składowych [m] i zamiana na [mm]
             mX = math.sqrt((mD_m * math.cos(alfa_rad))**2 +
                            (d * math.sin(alfa_rad) * mHz_rad)**2) * 1000.0
             mY = math.sqrt((mD_m * math.sin(alfa_rad))**2 +
@@ -158,14 +161,13 @@ def oblicz_wspolrzedne_i_bledy(nag, pomiary):
  
 def oblicz_pole_gaussa(wyniki):
     """
-    Oblicza pole powierzchni wieloboku metodą Gaussa (Shoelace formula).
+    Oblicza pole powierzchni wieloboku metodą Gaussa.
  
-    Bierze tylko punkty wieloboku (1–20 + punkt 7) — pomija serię monitoringową
+    Bierze tylko punkty wieloboku (1–20 + punkt 7) i pomija serię monitoringową
     7_xx bo to nie są wierzchołki wieloboku, tylko wielokrotne pomiary tego samego punktu.
  
     Wzór Gaussa:
         P = 0.5 * |Σ(Xi * Yi+1 - Xi+1 * Yi)|
-    gdzie indeks i+1 jest cykliczny — ostatni punkt łączy się z pierwszym.
  
     Parametry:
         wyniki (dict): Słownik wynikowy z oblicz_wspolrzedne_i_bledy().
@@ -177,7 +179,7 @@ def oblicz_pole_gaussa(wyniki):
             pole_m2   (float)         — pole powierzchni [m²]
             pole_ha   (float)         — pole powierzchni [ha]
     """
-
+    # bierzemy tylko wierzchołki wieloboku
     punkty_wb = [
         (wyniki['X'][i], wyniki['Y'][i])
         for i in range(len(wyniki['pkt']))
@@ -268,11 +270,9 @@ def _odwroc_2x2(M):
  
 def oblicz_regresje(x_list, y_list):
     """
-    Wyznacza parametry prostej regresji Y = a·X + b metodą macierzową
-    (najmniejsze kwadraty): theta = (A^T A)^{-1} A^T y.
+    Wyznacza parametry prostej regresji Y = a·X + b 
+    Metodą Najmniejszych Kwadratów: theta = (A^T A)^{-1} A^T y.
  
-    Obliczenia wykonywane są wyłącznie na wbudowanych strukturach Pythona
-    i module math — bez gotowych funkcji statystycznych z bibliotek.
  
     Parametry:
         x_list (list[float]): Współrzędne X punktów serii 7_xx.
@@ -299,8 +299,8 @@ def oblicz_regresje(x_list, y_list):
     if n < 3:
         raise ValueError("Do regresji potrzeba co najmniej 3 punktow.")
  
-    A = [[x_list[i], 1.0] for i in range(n)]
-    y = [[y_list[i]] for i in range(n)]
+    A = [[x_list[i], 1.0] for i in range(n)]  # macierz modelu
+    y = [[y_list[i]] for i in range(n)]     # wektor obserwacji 
  
     AT      = _transponuj(A)             
     ATA     = _mnoz_macierze(AT, A)      
@@ -311,6 +311,8 @@ def oblicz_regresje(x_list, y_list):
     a = theta[0][0]
     b = theta[1][0]
  
+    
+    # wyznaczenie estymatorów i statystyk dopasowania
     y_est   = [a * x_list[i] + b for i in range(n)]
     residua = [y_list[i] - y_est[i] for i in range(n)]
  
@@ -318,8 +320,8 @@ def oblicz_regresje(x_list, y_list):
     y_mean = sum(y_list) / n
     SStot  = sum((y_list[i] - y_mean) ** 2 for i in range(n))
  
-    R2 = 1.0 - SSres / SStot if SStot > 1e-15 else 0.0
-    Se = math.sqrt(SSres / (n - 2))
+    R2 = 1.0 - SSres / SStot if SStot > 1e-15 else 0.0  #współczynnik determinacji
+    Se = math.sqrt(SSres / (n - 2))                     #błąd standardowy residuów  
  
     return {
         'a':       a,
