@@ -35,6 +35,7 @@ def main():
     Wyświetla menu, obsługuje wybory użytkownika.
     '''
 
+    # Inicjalizacja katalogów wyjściowych (zabezpieczenie przed brakiem folderów)
     os.makedirs(os.path.join('wyniki', 'raporty'), exist_ok=True)
     os.makedirs(os.path.join('wyniki', 'wykresy'), exist_ok=True)
 
